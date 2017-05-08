@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.ref.WeakReference;
 import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -49,60 +50,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static int Port = 32100;
 
-    public Handler myHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_CLIENT_RECIEVE:
-                    if (null != mMessageView && null != msg.obj) {
-                        mMessageView.append("client receive:" + msg.obj + "\n");
-                    }
-                    break;
-                case MSG_CLIENT_SEND:
-                    if (null != mMessageView && null != msg.obj) {
-                        mMessageView.append("client send:" + msg.obj + "\n");
-                    }
-                    break;
-                case MSG_SERVER_REVIECE:
-                    if (null != mMessageView && null != msg.obj) {
-                        mMessageView.append("server receive:" + msg.obj + "\n");
-                    }
-                    break;
-                case MSG_SERVER_SEND:
-                    if (null != mMessageView && null != msg.obj) {
-                        mMessageView.append("server send:" + msg.obj + "\n");
-                    }
-                    break;
-                case MSG_ERROR:
-                    if (null != mMessageView && null != msg.obj) {
-                        mMessageView.append("error:" + msg.obj + "\n");
-                    }
-                    break;
-                case MSG_CLIENT:
-                    if (null != mMessageView && null != msg.obj) {
-                        mMessageView.append("client:" + msg.obj + "\n");
-                    }
-                    break;
-                case MSG_SERVER:
-                    if (null != mMessageView && null != msg.obj) {
-                        mMessageView.append("server:" + msg.obj + "\n");
-                    }
-                    break;
-
-            }
-
-        }
-
-    };
+    private MessageHandler myHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //开启服务器线程
-        ServerThread serverThread = new ServerThread();
-        serverThread.start();
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -132,6 +85,11 @@ public class MainActivity extends AppCompatActivity {
 
         mMessageView = (TextView) findViewById(R.id.message);
 
+        myHandler = new MessageHandler(this);
+
+        //开启服务器线程
+        ServerThread serverThread = new ServerThread();
+        serverThread.start();
     }
 
     private class LoginThread extends Thread {
@@ -270,6 +228,58 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static class MessageHandler extends Handler {
+        private WeakReference<MainActivity> mActivityWR;
+
+        MessageHandler(MainActivity activity) {
+            mActivityWR = new WeakReference<>(activity);
+        }
+        @Override
+        public void handleMessage(Message msg) {
+            final MainActivity mainActivity = mActivityWR.get();
+            TextView mMessageView = mainActivity.mMessageView;
+            switch (msg.what) {
+                case MSG_CLIENT_RECIEVE:
+                    if (null != mMessageView && null != msg.obj) {
+                        mMessageView.append("client receive:" + msg.obj + "\n");
+                    }
+                    break;
+                case MSG_CLIENT_SEND:
+                    if (null != mMessageView && null != msg.obj) {
+                        mMessageView.append("client send:" + msg.obj + "\n");
+                    }
+                    break;
+                case MSG_SERVER_REVIECE:
+                    if (null != mMessageView && null != msg.obj) {
+                        mMessageView.append("server receive:" + msg.obj + "\n");
+                    }
+                    break;
+                case MSG_SERVER_SEND:
+                    if (null != mMessageView && null != msg.obj) {
+                        mMessageView.append("server send:" + msg.obj + "\n");
+                    }
+                    break;
+                case MSG_ERROR:
+                    if (null != mMessageView && null != msg.obj) {
+                        mMessageView.append("error:" + msg.obj + "\n");
+                    }
+                    break;
+                case MSG_CLIENT:
+                    if (null != mMessageView && null != msg.obj) {
+                        mMessageView.append("client:" + msg.obj + "\n");
+                    }
+                    break;
+                case MSG_SERVER:
+                    if (null != mMessageView && null != msg.obj) {
+                        mMessageView.append("server:" + msg.obj + "\n");
+                    }
+                    break;
+
+            }
+
+        }
     }
 }
 
